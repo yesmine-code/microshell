@@ -19,12 +19,9 @@ int change_path(char *path)
     if (d == NULL)
 		return -1;
     ret = chdir(path);
-    if (ret < 0)
-	{
-        closedir(d);
-		return -1;
-    }
     closedir(d);
+    if (ret < 0)
+		return -1;
     return (ret);
 }
 
@@ -53,7 +50,7 @@ void ft_fatal(void)
 	exit(EXIT_FAILURE);
 }
 
-pid_t	main_func(char **curent_pipe, char **env, int *old_pipe[], t_shell shell)
+void	main_func(char **curent_pipe, char **env, int *old_pipe[], t_shell shell)
 {
 	int new_pipe[2];
 	pid_t cpid;
@@ -110,9 +107,9 @@ pid_t	main_func(char **curent_pipe, char **env, int *old_pipe[], t_shell shell)
 				*old_pipe[0] = new_pipe[0];
 				*old_pipe[1] = new_pipe[1];
 			}
+			waitpid(cpid, NULL, 0);
 		}
 	}
-	return cpid;
 }
 
 int get_pos_of_c(int ac , char **av, char c)
@@ -135,12 +132,8 @@ void get_pipes(t_command com, char **env)
 	int *old_pipe[2];
 	t_shell shell;
 	char **curent_pipe;
-	pid_t cpid;
 	int i;
-	int command_num;
 
-	command_num = 0;
-	cpid = 0;
 	old_pipe[0]= malloc(sizeof(int));
 	old_pipe[1]= malloc(sizeof(int));
 	if (old_pipe[0] == NULL || old_pipe[1] == NULL)
@@ -168,16 +161,9 @@ void get_pipes(t_command com, char **env)
 			i++;
 		}
 		curent_pipe[i] = NULL;	
-		cpid = main_func(curent_pipe, env, old_pipe, shell);
-		command_num++;
+		main_func(curent_pipe, env, old_pipe, shell);
 		pipe_start = pos + 2;
 		free(curent_pipe);
-	}
-	while (command_num > 0)
-	{
-		waitpid(cpid, NULL, 0);
-		cpid--;
-		command_num--;
 	}
 	free(old_pipe[0]);
 	free(old_pipe[1]);
